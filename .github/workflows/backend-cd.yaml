@@ -13,6 +13,13 @@ on:
     # paths:
     #   - 'starter/backend/**'
 
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: backend
+  IMAGE_TAG: ${{ github.sha }}
+  EKS_CLUSTER_NAME: my-cluster
+  REACT_APP_MOVIE_API_URL: http://localhost:5000
+
 jobs:
   lint:
     name: 'Code linting'
@@ -75,16 +82,58 @@ jobs:
         run: pipenv run test
         working-directory: starter/backend
   build:
-    name: 'Code building'
     needs: [lint, test]
+    name: 'Code building and deployment'
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code 
         uses: actions/checkout@v3
 
-      - name: Setup docker buildx
-        uses: docker/setup-buildx-action@v2
-      
-      - name: Build docker image without pushing it 
-        run: docker buildx build --load -t backend:latest -f ./starter/backend/Dockerfile starter/backend
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          # Build the image
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f ./starter/backend/Dockerfile starter/backend
+          
+          # Push the specific tag (SHA)
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          
+          # Push 'latest' tag for convenience
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          
+          # Export the Full Image URI for the next step
+          echo "BACKEND_FULL_IMAGE=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_ENV
+
+      # 3. Authenticate kubectl
+      - name: Update Kubeconfig
+        run: |
+          aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_REGION
+
+      # 4. Deploy to Kubernetes using Kustomize
+      - name: Deploy to EKS
+        run: |
+          # Navigate to the k8s directory containing kustomization.yaml
+          cd k8s
+
+          kustomize edit set image backend=$BACKEND_FULL_IMAGE
+
+          # Apply the configuration
+          kustomize build . | kubectl apply -f -
+          
+          # kubectl rollout status deployment/frontend
