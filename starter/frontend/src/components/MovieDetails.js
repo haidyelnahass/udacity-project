@@ -17,4 +17,12 @@ function MovieDetail({ movie }) {
   );
 }
 
+MovieDetails.propTypes = {
+  movie: PropTypes.shape({
+    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    title: PropTypes.string.isRequired,
+    year: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  }).isRequired,
+};
+
 export default MovieDetail;

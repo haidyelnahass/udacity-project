@@ -10,5 +10,3 @@ test('renders Movie List heading', () => {
   const linkElement = screen.getByText(movieHeading);
   expect(linkElement).toBeInTheDocument();
 });
-
-
