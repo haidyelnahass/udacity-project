@@ -10,8 +10,8 @@ on:
   push:
     branches:
       - main
-    # paths:
-    #   - 'starter/backend/**'
+    paths:
+      - 'starter/backend/**'
 
 env:
   AWS_REGION: us-east-1
