@@ -1,4 +1,4 @@
-name: 'Udacity Frontend Integration Workflow'
+name: 'Frontend Continuous Integration'
 
 on:
   workflow_dispatch:
@@ -28,6 +28,11 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: latest 
+      - name: Cache node modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
       - name: Install dependencies
         run: npm install
         working-directory: starter/frontend
@@ -35,7 +40,7 @@ jobs:
       - name: Run linting
         run: npm run lint
         env:
-          FAIL_LINT: false
+          FAIL_LINT: true
         working-directory: starter/frontend
   test:
     name: 'Code testing'
@@ -48,12 +53,17 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: latest 
+      - name: Cache node modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
       - name: Install dependencies
         run: npm install
         working-directory: starter/frontend
 
       - name: Run tests
-        run: npm test
+        run: npm run test
         working-directory: starter/frontend
   build:
     name: 'Code building'

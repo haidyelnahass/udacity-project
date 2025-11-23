@@ -1,0 +1,89 @@
+name: 'Backend Continuous Integration'
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'starter/backend/**'
+  push:
+    branches:
+      - main
+    paths:
+      - 'starter/backend/**'
+
+jobs:
+  lint:
+    name: 'Code linting'
+    runs-on: ubuntu-latest
+
+    steps: 
+      - name: Checkout code 
+        uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: latest
+      - name: Cache pipenv
+        uses: actions/cache@v3
+        with:
+          path: ~/.local/share/virtualenvs
+          key: ${{ runner.os }}-pipenv-${{ hashFiles('Pipfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pipenv-
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pipenv
+          pipenv install --deploy --ignore-pipfile
+        working-directory: starter/backend
+
+      - name: Run linting
+        run: pipenv run lint
+        env:
+          FAIL_LINT: true
+        working-directory: starter/backend
+  test:
+    name: 'Code testing'
+    runs-on: ubuntu-latest
+
+    steps: 
+      - name: Checkout code 
+        uses: actions/checkout@v3
+      - name: Set up Python 
+        uses: actions/setup-python@v4
+        with:
+          python-version: latest 
+      - name: Cache pipenv
+        uses: actions/cache@v3
+        with:
+          path: ~/.local/share/virtualenvs
+          key: ${{ runner.os }}-pipenv-${{ hashFiles('Pipfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pipenv-
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pipenv
+          pipenv install --deploy --ignore-pipfile
+        working-directory: starter/backend
+
+      - name: Run tests
+        run: pipenv run test
+        working-directory: starter/backend
+  build:
+    name: 'Code building'
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code 
+        uses: actions/checkout@v3
+
+      - name: Setup docker buildx
+        uses: docker/setup-buildx-action@v2
+      
+      - name: Build docker image without pushing it 
+        run: docker buildx build --load -t backend:latest -f ./starter/backend/Dockerfile starter/backend
+      

@@ -1,4 +1,4 @@
-name: 'Udacity Frontend Deployment Workflow'
+name: 'Frontend Continuous Deployment'
 
 on:
   # workflow_run:
@@ -20,7 +20,32 @@ env:
   REACT_APP_MOVIE_API_URL: http://localhost:5000
 
 jobs:
-  test: 
+  lint:
+    name: 'Code linting'
+    runs-on: ubuntu-latest
+
+    steps: 
+      - name: Checkout code 
+        uses: actions/checkout@v3
+      - name: Setup dependencies 
+        uses: actions/setup-node@v3
+        with:
+          node-version: latest 
+      - name: Cache node modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+      - name: Install dependencies
+        run: npm install
+        working-directory: starter/frontend
+
+      - name: Run linting
+        run: npm run lint
+        env:
+          FAIL_LINT: true
+        working-directory: starter/frontend
+  test:
     name: 'Code testing'
     runs-on: ubuntu-latest
 
@@ -31,16 +56,20 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: latest 
-          
+      - name: Cache node modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
       - name: Install dependencies
         run: npm install
         working-directory: starter/frontend
 
       - name: Run tests
-        run: npm test
+        run: npm run test
         working-directory: starter/frontend
   build:
-    needs: test
+    needs: [lint, test]
     name: 'Code building and deployment'
     runs-on: ubuntu-latest
 
@@ -94,4 +123,4 @@ jobs:
           # Apply the configuration
           kustomize build . | kubectl apply -f -
           
-          kubectl rollout status deployment/frontend
+          # kubectl rollout status deployment/frontend
