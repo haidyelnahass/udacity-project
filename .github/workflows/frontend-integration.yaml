@@ -1,0 +1,74 @@
+name: 'Udacity Frontend Integration Workflow'
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'starter/frontend/**'
+  push:
+    branches:
+      - main
+    paths:
+      - 'starter/frontend/**'
+
+env:
+  REACT_APP_MOVIE_API_URL: http://localhost:5000
+
+jobs:
+  lint:
+    name: 'Code linting'
+    runs-on: ubuntu-latest
+
+    steps: 
+      - name: Checkout code 
+        uses: actions/checkout@v3
+      - name: Setup dependencies 
+        uses: actions/setup-node@v3
+        with:
+          node-version: latest 
+        working-directory: starter/frontend
+      - name: Install dependencies
+        run: npm install
+        working-directory: starter/frontend
+
+      - name: Run linting
+        run: npm run lint
+        env:
+          FAIL_LINT: false
+        working-directory: starter/frontend
+  test:
+    name: 'Code testing'
+    runs-on: ubuntu-latest
+
+    steps: 
+      - name: Checkout code 
+        uses: actions/checkout@v3
+      - name: Setup dependencies 
+        uses: actions/setup-node@v3
+        with:
+          node-version: latest 
+        working-directory: starter/frontend
+      - name: Install dependencies
+        run: npm install
+        working-directory: starter/frontend
+
+      - name: Run tests
+        run: npm test
+        working-directory: starter/frontend
+  build:
+    name: 'Code building'
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code 
+        uses: actions/checkout@v3
+
+      - name: Setup docker buildx
+        uses: docker/setup-buildx-action@v2
+      
+      - name: Build docker image without pushing it 
+        run: docker buildx build --build-arg=REACT_APP_MOVIE_API_URL --load -t frontend:latest .
+      

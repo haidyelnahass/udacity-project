@@ -1,0 +1,97 @@
+name: 'Udacity Frontend Deployment Workflow'
+
+on:
+  # workflow_run:
+  #   workflows: ["Udacity Frontend Integration Workflow"]
+  #   types:
+  #     - completed
+  push:
+    branches:
+      - main
+    paths:
+      - 'starter/frontend/**'
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: frontend
+  IMAGE_TAG: ${{ github.sha }}
+  EKS_CLUSTER_NAME: cluster
+  REACT_APP_MOVIE_API_URL: http://localhost:5000
+
+jobs:
+  test: 
+    name: 'Code testing'
+    runs-on: ubuntu-latest
+
+    steps: 
+      - name: Checkout code 
+        uses: actions/checkout@v3
+      - name: Setup dependencies 
+        uses: actions/setup-node@v3
+        with:
+          node-version: latest 
+        working-directory: starter/frontend
+      - name: Install dependencies
+        run: npm install
+        working-directory: starter/frontend
+
+      - name: Run tests
+        run: npm test
+        working-directory: starter/frontend
+  build:
+    needs: test
+    name: 'Code building and deployment'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code 
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          # Build the image
+          docker build --build-arg=REACT_APP_MOVIE_API_URL -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          
+          # Push the specific tag (SHA)
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          
+          # Push 'latest' tag for convenience
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          
+          # Export the Full Image URI for the next step
+          echo "FULL_IMAGE=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_ENV
+
+      # 3. Authenticate kubectl
+      - name: Update Kubeconfig
+        run: |
+          aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_REGION
+
+      # 4. Deploy to Kubernetes using Kustomize
+      - name: Deploy to EKS
+        run: |
+          # Navigate to the k8s directory containing kustomization.yaml
+          cd k8s
+
+          kustomize edit set image frontend=$FULL_IMAGE
+
+          # Apply the configuration
+          kustomize build . | kubectl apply -f -
+          
+          kubectl rollout status deployment/frontend
