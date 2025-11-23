@@ -8,8 +8,8 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'starter/frontend/**'
+    # paths:
+    #   - 'starter/frontend/**'
   workflow_dispatch:
 
 env:
@@ -116,7 +116,7 @@ jobs:
       - name: Deploy to EKS
         run: |
           # Navigate to the k8s directory containing kustomization.yaml
-          cd k8s
+          ./starter/frontend/k8s
 
           kustomize edit set image frontend=$FULL_IMAGE
 
