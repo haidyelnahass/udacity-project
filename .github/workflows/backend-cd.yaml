@@ -37,6 +37,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install pipenv
           pipenv install --deploy --ignore-pipfile
+          pipenv install --dev flake8
         working-directory: starter/backend
 
       - name: Run linting
@@ -67,6 +68,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install pipenv
           pipenv install --deploy --ignore-pipfile
+          pipenv install --dev flake8
         working-directory: starter/backend
 
       - name: Run tests
