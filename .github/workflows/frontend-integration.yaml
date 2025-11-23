@@ -6,12 +6,12 @@ on:
     branches:
       - main
     paths:
-      - './starter/frontend/**'
+      - 'starter/frontend/**'
   push:
     branches:
       - main
     paths:
-      - './starter/frontend/**'
+      - 'starter/frontend/**'
 
 env:
   REACT_APP_MOVIE_API_URL: http://localhost:5000
