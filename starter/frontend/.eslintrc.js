@@ -32,5 +32,6 @@ module.exports = {
     ],
     'react/jsx-uses-vars': 'warn',
     'react/prop-types': 'warn',
+    
   },
 };

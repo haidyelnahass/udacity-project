@@ -66,7 +66,7 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
           # Build the image
-          docker build --build-arg=REACT_APP_MOVIE_API_URL -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker build --build-arg=REACT_APP_MOVIE_API_URL -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f ./starter/frontend/Dockerfile starter/frontend
           
           # Push the specific tag (SHA)
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG

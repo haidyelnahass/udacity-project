@@ -68,5 +68,5 @@ jobs:
         uses: docker/setup-buildx-action@v2
       
       - name: Build docker image without pushing it 
-        run: docker buildx build --build-arg=REACT_APP_MOVIE_API_URL --load -t frontend:latest -f ./starter/frontend/Dockerfile .
+        run: docker buildx build --build-arg=REACT_APP_MOVIE_API_URL --load -t frontend:latest -f ./starter/frontend/Dockerfile starter/frontend
       
