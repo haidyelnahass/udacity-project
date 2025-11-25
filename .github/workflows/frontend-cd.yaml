@@ -17,7 +17,6 @@ env:
   ECR_REPOSITORY: frontend
   IMAGE_TAG: ${{ github.sha }}
   EKS_CLUSTER_NAME: cluster
-  REACT_APP_MOVIE_API_URL: http://backend:80
 
 jobs:
   lint:
@@ -99,6 +98,7 @@ jobs:
         run: |
            # Build and push multi-arch image
             docker buildx build --platform linux/amd64,linux/arm64 \
+              --build-arg REACT_APP_MOVIE_API_URL=${{ secrets.REACT_APP_MOVIE_API_URL }} \
               -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
               -t $ECR_REGISTRY/$ECR_REPOSITORY:latest \
               -f ./starter/frontend/Dockerfile ./starter/frontend \
