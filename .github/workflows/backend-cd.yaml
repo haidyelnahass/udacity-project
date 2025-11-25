@@ -10,14 +10,14 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'starter/backend/**'
+    # paths:
+    #   - 'starter/backend/**'
 
 env:
   AWS_REGION: us-east-1
   ECR_REPOSITORY: backend
   IMAGE_TAG: ${{ github.sha }}
-  EKS_CLUSTER_NAME: my-cluster
+  EKS_CLUSTER_NAME: cluster
   REACT_APP_MOVIE_API_URL: http://localhost:5000
 
 jobs:

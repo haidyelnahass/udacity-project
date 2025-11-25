@@ -8,15 +8,15 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'starter/frontend/**'
+    # paths:
+    #   - 'starter/frontend/**'
   workflow_dispatch:
 
 env:
   AWS_REGION: us-east-1
   ECR_REPOSITORY: frontend
   IMAGE_TAG: ${{ github.sha }}
-  EKS_CLUSTER_NAME: my-cluster
+  EKS_CLUSTER_NAME: cluster
   REACT_APP_MOVIE_API_URL: http://backend:80
 
 jobs:
