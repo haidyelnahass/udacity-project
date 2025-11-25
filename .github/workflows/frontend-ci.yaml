@@ -14,7 +14,7 @@ on:
       - 'starter/frontend/**'
 
 env:
-  REACT_APP_MOVIE_API_URL: http://backend:5000
+  REACT_APP_MOVIE_API_URL: http://backend:80
 
 jobs:
   lint:
