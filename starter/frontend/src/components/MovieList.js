@@ -9,7 +9,7 @@ function MovieList({ onMovieClick }) {
     axios
       .get(`${process.env.REACT_APP_MOVIE_API_URL}/movies`)
       .then((response) => {
-        console.log('Fetched movies:', response.data);
+        console.log('Fetched moviessssss:', response.data);
         setMovies(response.data.movies);
       })
       .catch((error) => {
