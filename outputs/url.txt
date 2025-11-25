@@ -1,1 +1,4 @@
-Working URL: http://ac3860e8d2bf84e69a80bb097d279b61-2012202447.us-east-1.elb.amazonaws.com/
+Frontend Working URL: http://ac3860e8d2bf84e69a80bb097d279b61-2012202447.us-east-1.elb.amazonaws.com/
+
+Backend Curl: 
+curl --location 'http://ae2041a8112d042729f0ed05c3a70bbf-895036509.us-east-1.elb.amazonaws.com/movies'
