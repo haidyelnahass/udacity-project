@@ -7,11 +7,11 @@ on:
       - main
     paths:
       - 'starter/backend/**'
-  push:
-    branches:
-      - main
-    paths:
-      - 'starter/backend/**'
+  # push:
+  #   branches:
+  #     - main
+  #   paths:
+  #     - 'starter/backend/**'
 
 jobs:
   lint:
